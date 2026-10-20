@@ -37,11 +37,12 @@ resource "aws_security_group_rule" "allow_8080" {
 
 
 resource "aws_launch_template" "tmp"{
-    image_id = "ami-004d1eaf8eaa0107d"
+    image_id = var.ami
     instance_type = var.instance_type
     vpc_security_group_ids = [aws_security_group.instance.id]
     # Render the User Data script as a template
     user_data = base64encode(templatefile("${path.module}/user-data.sh", {
+        server_text = var.server_text
         server_port = var.server_port
         db_address = data.terraform_remote_state.db.outputs.address
         db_port = data.terraform_remote_state.db.outputs.port
@@ -52,6 +53,7 @@ resource "aws_launch_template" "tmp"{
 }
 
 resource "aws_autoscaling_group" "example" {
+    name = var.cluster_name
     vpc_zone_identifier = data.aws_subnets.default.ids
     min_size = var.min_size
     max_size = var.max_size
@@ -73,6 +75,13 @@ resource "aws_autoscaling_group" "example" {
             key = tag.key
             value = tag.value
             propagate_at_launch = true
+        }
+    }
+    # Use instance refresh to roll out changes to the ASG
+    instance_refresh {
+        strategy = "Rolling"
+        preferences {
+            min_healthy_percentage = 50
         }
     }
 }

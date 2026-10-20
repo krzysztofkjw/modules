@@ -36,6 +36,23 @@ variable "custom_tags" {
     default = {}
 }
 
+variable "enable_autoscaling" {
+    description = "If set to true, enable auto scaling"
+    type = bool
+}
+
+variable "ami" {
+    description = "The AMI to run in the cluster"
+    type = string
+    default = "ami-004d1eaf8eaa0107d"
+}
+
+variable "server_text" {
+    description = "The text the web server should return"
+    type = string
+    default = "Hello, World"
+}
+
 locals {
     http_port = 80
     http2_port = 8080
